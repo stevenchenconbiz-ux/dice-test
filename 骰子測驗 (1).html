@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>骰子排序測驗</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+      background: linear-gradient(180deg, #f6f7f9 0%, #eef1f4 100%);
+      color: #1f2937;
+    }
+
+    .screen {
+      min-height: 100vh;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 20px;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    .card {
+      width: min(1100px, 100%);
+      background: rgba(255,255,255,0.95);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 28px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+      padding: 34px 28px;
+    }
+
+    .intro-card {
+      width: min(780px, 100%);
+      text-align: center;
+      padding: 44px 34px;
+    }
+
+    .title {
+      font-size: 38px;
+      font-weight: 900;
+      margin: 0 0 14px;
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      font-size: 17px;
+      color: #4b5563;
+      line-height: 1.9;
+      margin: 0 0 22px;
+    }
+
+    .instruction-panel {
+      margin: 28px auto 32px;
+      padding: 26px 24px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #fafafa 0%, #f3f4f6 100%);
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      text-align: left;
+    }
+
+    .instruction-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0 0 14px;
+      text-align: center;
+    }
+
+    .instruction-list {
+      margin: 0;
+      padding-left: 22px;
+      color: #374151;
+      line-height: 1.9;
+      font-size: 17px;
+    }
+
+    .instruction-highlight {
+      color: #b91c1c;
+      font-weight: 800;
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 24px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .primary-btn {
+      background: #111827;
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(17, 24, 39, 0.22);
+    }
+
+    .secondary-btn {
+      background: #fff;
+      color: #111827;
+      border: 1px solid rgba(17, 24, 39, 0.12);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    }
+
+    .test-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 26px;
+    }
+
+    .timer-box {
+      background: rgba(255,255,255,0.95);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      border-radius: 18px;
+      padding: 14px 26px;
+      min-width: 200px;
+      text-align: center;
+    }
+
+    .timer-label {
+      display: block;
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .timer-value {
+      font-size: 36px;
+      font-weight: 900;
+      color: #111827;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(15, 23, 42, 0.07);
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      padding: 24px;
+    }
+
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 24px;
+      text-align: center;
+    }
+
+    .panel-note {
+      font-size: 14px;
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(5, 72px);
+      gap: 12px;
+      justify-content: center;
+      padding: 14px;
+      background: linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
+      border-radius: 20px;
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      box-shadow: inset 0 2px 8px rgba(255,255,255,0.8), inset 0 -2px 10px rgba(15, 23, 42, 0.04);
+    }
+
+    .die {
+      position: relative;
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      background: radial-gradient(circle at 28% 24%, #ffffff 0%, #fbfbfb 30%, #ececec 72%, #d9d9d9 100%);
+      border: 1px solid rgba(17, 24, 39, 0.08);
+      box-shadow:
+        inset 0 3px 8px rgba(255,255,255,0.95),
+        inset -2px -4px 8px rgba(0,0,0,0.08),
+        0 8px 16px rgba(15, 23, 42, 0.12);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 8px;
+      user-select: none;
+    }
+
+    .player-die {
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .player-die:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        inset 0 3px 8px rgba(255,255,255,0.95),
+        inset -2px -4px 8px rgba(0,0,0,0.08),
+        0 14px 24px rgba(15, 23, 42, 0.16);
+    }
+
+    .player-die:active {
+      transform: scale(0.98);
+    }
+
+    .pip {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      justify-self: center;
+      align-self: center;
+      box-shadow: inset 0 2px 3px rgba(255,255,255,0.25), inset 0 -2px 3px rgba(0,0,0,0.2);
+    }
+
+    .black { background: radial-gradient(circle at 30% 30%, #3b3b3b 0%, #111111 58%, #000000 100%); }
+    .red { background: radial-gradient(circle at 30% 30%, #ff8a8a 0%, #ef4444 48%, #b91c1c 100%); }
+    .hidden { visibility: hidden; }
+    .danger { color: #b91c1c !important; }
+    .safe { color: #047857 !important; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 999;
+    }
+
+    .overlay.show { display: flex; }
+
+    .modal {
+      width: min(92vw, 520px);
+      background: #fff;
+      border-radius: 28px;
+      padding: 34px 28px 30px;
+      box-shadow: 0 28px 60px rgba(15, 23, 42, 0.24);
+      text-align: center;
+    }
+
+    .modal-icon {
+      font-size: 54px;
+      margin-bottom: 12px;
+    }
+
+    .modal-title {
+      font-size: 30px;
+      font-weight: 900;
+      margin: 0 0 12px;
+    }
+
+    .modal-text {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #374151;
+      margin: 0 0 24px;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .screen { padding: 16px 10px; }
+      .card { padding: 24px 14px; }
+      .intro-card { padding: 34px 18px; }
+      .title { font-size: 30px; }
+      .instruction-title { font-size: 22px; }
+      .instruction-list { font-size: 15px; }
+      .board {
+        grid-template-columns: repeat(5, 58px);
+        gap: 8px;
+        padding: 10px;
+      }
+      .die {
+        width: 58px;
+        height: 58px;
+        border-radius: 14px;
+        padding: 6px;
+      }
+      .pip {
+        width: 10px;
+        height: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section id="introScreen" class="screen active">
+    <div class="card intro-card">
+      <h1 class="title">骰子排序測驗</h1>
+      <p class="subtitle">
+        本測驗將評估您的觀察力與反應速度。<br>
+        請先閱讀以下說明，確認後再開始挑戰。
+      </p>
+
+      <div class="instruction-panel">
+        <h2 class="instruction-title">測驗說明</h2>
+        <ol class="instruction-list">
+          <li>進入測驗後，左側會出現 <span class="instruction-highlight">目標畫面</span>，右側為 <span class="instruction-highlight">操作區</span>。</li>
+          <li>請在 <span class="instruction-highlight">1 分鐘內</span>，將操作區的骰子點擊切換成與目標畫面完全一致。</li>
+          <li>每顆骰子點一下，會依序切換為 <span class="instruction-highlight">1 → 2 → 3 → 4 → 5 → 6</span>。</li>
+          <li>系統會 <span class="instruction-highlight">主動偵測</span> 是否完成；一旦左右一致，會立即顯示挑戰成功。</li>
+        </ol>
+      </div>
+
+      <div class="btn-row">
+        <button id="startChallengeBtn" class="primary-btn">開始挑戰</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="gameScreen" class="screen">
+    <div class="card">
+      <div class="test-header">
+        <div class="timer-box">
+          <span class="timer-label">剩餘時間</span>
+          <span id="timer" class="timer-value">60</span>
+        </div>
+      </div>
+
+      <div class="layout">
+        <section class="panel">
+          <h2>目標畫面</h2>
+          <p class="panel-note">請依照左側畫面，完成右側操作區排列。</p>
+          <div id="targetBoard" class="board"></div>
+        </section>
+
+        <section class="panel">
+          <h2>操作區</h2>
+          <p class="panel-note">點擊骰子即可切換點數，系統會自動偵測是否通過。</p>
+          <div id="playerBoard" class="board"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <div id="successOverlay" class="overlay">
+    <div class="modal">
+      <div class="modal-icon">✅</div>
+      <h3 class="modal-title safe">挑戰成功</h3>
+      <p class="modal-text">
+        您已在時限內完成測驗。<br>
+        請截圖通過畫面提供給顧問。
+      </p>
+      <div class="btn-row">
+        <button id="successRestartBtn" class="primary-btn">重新挑戰</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="failOverlay" class="overlay">
+    <div class="modal">
+      <div class="modal-icon">❌</div>
+      <h3 class="modal-title danger">挑戰失敗</h3>
+      <p class="modal-text">
+        很可惜，您未能在一分鐘內完成指定排列。<br>
+        請點擊下方按鈕重新挑戰。
+      </p>
+      <div class="btn-row">
+        <button id="retryBtn" class="primary-btn">重新挑戰</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const rows = 4;
+    const cols = 5;
+    const total = rows * cols;
+    const timeLimit = 60;
+
+    const fixedTarget = [
+      1, 2, 3, 4, 5,
+      5, 4, 3, 2, 1,
+      1, 2, 3, 4, 5,
+      5, 4, 3, 2, 1
+    ];
+
+    let target = [...fixedTarget];
+    let player = Array(total).fill(1);
+    let timeLeft = timeLimit;
+    let timerInterval = null;
+    let gameEnded = false;
+
+    const introScreen = document.getElementById('introScreen');
+    const gameScreen = document.getElementById('gameScreen');
+    const startChallengeBtn = document.getElementById('startChallengeBtn');
+    const timerEl = document.getElementById('timer');
+    const targetBoard = document.getElementById('targetBoard');
+    const playerBoard = document.getElementById('playerBoard');
+    const successOverlay = document.getElementById('successOverlay');
+    const failOverlay = document.getElementById('failOverlay');
+    const retryBtn = document.getElementById('retryBtn');
+    const successRestartBtn = document.getElementById('successRestartBtn');
+
+    const pipMap = {
+      1: { color: 'red', positions: [4] },
+      2: { color: 'black', positions: [0, 8] },
+      3: { color: 'black', positions: [0, 4, 8] },
+      4: { color: 'red', positions: [0, 2, 6, 8] },
+      5: { color: 'black', positions: [0, 2, 4, 6, 8] },
+      6: { color: 'black', positions: [0, 2, 3, 5, 6, 8] }
+    };
+
+    function showScreen(screen) {
+      introScreen.classList.remove('active');
+      gameScreen.classList.remove('active');
+      screen.classList.add('active');
+    }
+
+    function createDie(value, clickable = false, index = null) {
+      const die = document.createElement('div');
+      die.className = clickable ? 'die player-die' : 'die';
+
+      for (let i = 0; i < 9; i++) {
+        const pip = document.createElement('span');
+        pip.className = 'pip hidden';
+        die.appendChild(pip);
+      }
+
+      renderDieFace(die, value);
+
+      if (clickable) {
+        die.addEventListener('click', () => {
+          if (gameEnded) return;
+          player[index] = player[index] === 6 ? 1 : player[index] + 1;
+          renderBoards();
+          checkWin();
+        });
+      }
+
+      return die;
+    }
+
+    function renderDieFace(die, value) {
+      const pips = die.querySelectorAll('.pip');
+      pips.forEach(p => {
+        p.className = 'pip hidden';
+      });
+
+      const config = pipMap[value];
+      config.positions.forEach(pos => {
+        pips[pos].className = `pip ${config.color}`;
+      });
+    }
+
+    function renderBoards() {
+      targetBoard.innerHTML = '';
+      playerBoard.innerHTML = '';
+
+      target.forEach(value => {
+        targetBoard.appendChild(createDie(value, false));
+      });
+
+      player.forEach((value, index) => {
+        playerBoard.appendChild(createDie(value, true, index));
+      });
+    }
+
+    function updateTimerDisplay() {
+      timerEl.textContent = timeLeft;
+      if (timeLeft <= 10) {
+        timerEl.classList.add('danger');
+      } else {
+        timerEl.classList.remove('danger');
+      }
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (gameEnded) return;
+        timeLeft -= 1;
+        updateTimerDisplay();
+
+        if (timeLeft <= 0) {
+          timeLeft = 0;
+          updateTimerDisplay();
+          endGame(false);
+        }
+      }, 1000);
+    }
+
+    function checkWin() {
+      const passed = player.every((value, index) => value === target[index]);
+      if (passed) {
+        endGame(true);
+      }
+    }
+
+    function endGame(success) {
+      if (gameEnded) return;
+      gameEnded = true;
+      clearInterval(timerInterval);
+
+      if (success) {
+        successOverlay.classList.add('show');
+      } else {
+        failOverlay.classList.add('show');
+      }
+    }
+
+    function resetGameState() {
+      clearInterval(timerInterval);
+      gameEnded = false;
+      player = Array(total).fill(1);
+      timeLeft = timeLimit;
+      timerEl.classList.remove('danger');
+      updateTimerDisplay();
+      successOverlay.classList.remove('show');
+      failOverlay.classList.remove('show');
+      renderBoards();
+    }
+
+    function startChallenge() {
+      resetGameState();
+      showScreen(gameScreen);
+      startTimer();
+    }
+
+    function restartChallenge() {
+      startChallenge();
+    }
+
+    startChallengeBtn.addEventListener('click', startChallenge);
+    retryBtn.addEventListener('click', restartChallenge);
+    successRestartBtn.addEventListener('click', restartChallenge);
+
+    renderBoards();
+    updateTimerDisplay();
+  </script>
+</body>
+</html>
